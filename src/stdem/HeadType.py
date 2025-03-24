@@ -12,7 +12,7 @@ class HeadType:
         self.colume = cell.column - 2
 
     def addChild(self, child: "HeadType"):
-        raise TableHeadError(self.cell, "unable add child on this cell.")
+        raise TableHeadError(self.cell, "Unable add child on this cell")
 
     def parsetData(self, data: list[Cell], enable: bool) -> data:
         if enable:
@@ -21,7 +21,7 @@ class HeadType:
             else:
                 return None
         elif data[self.colume].value != None:
-            raise TableDataError(data[self.colume], "")
+            raise TableDataError(data[self.colume], "Unexpected data encountered")
 
     def __repr__(self) -> str:
         return self.name
@@ -37,7 +37,7 @@ class HeadInt(HeadType):
             else:
                 return None
         elif data[self.colume].value != None:
-            raise TableDataError(data[self.colume], "")
+            raise TableDataError(data[self.colume], "Unexpected data encountered")
 
 
 class HeadString(HeadType):
@@ -49,7 +49,7 @@ class HeadString(HeadType):
             else:
                 return None
         elif data[self.colume].value != None:
-            raise TableDataError(data[self.colume], "")
+            raise TableDataError(data[self.colume], "Unexpected data encountered")
 
 
 class HeadFloat(HeadType):
@@ -61,7 +61,7 @@ class HeadFloat(HeadType):
             else:
                 return None
         elif data[self.colume].value != None:
-            raise TableDataError(data[self.colume], "")
+            raise TableDataError(data[self.colume], "Unexpected data encountered")
 
 
 
@@ -75,12 +75,12 @@ class HeadList(HeadType):
     def addChild(self, child: HeadType):
         if self.key == None:
             if not isinstance(child, HeadInt):
-                raise TableHeadError(self.cell, "unable addchild on this type")
+                raise TableHeadError(self.cell, "Unable addchild on this type")
             self.key = child
         elif self.value == None:
             self.value = child
         else:
-            raise TableHeadError(self.cell, "unable add more child on this cell")
+            raise TableHeadError(self.cell, "Unable add more child on this cell")
 
     def parsetData(self, data: list[Cell], enable: bool) -> data:
         if enable:
@@ -88,7 +88,7 @@ class HeadList(HeadType):
         key = self.key.parsetData(data, True)
         if key != None:
             if key != len(self.data):
-                raise TableDataError(data[self.colume], "index number type error")
+                raise TableDataError(data[self.colume], "Index number type error")
             self.data.append(self.value.parsetData(data, True))
         else:
             self.value.parsetData(data, False)
@@ -106,12 +106,12 @@ class HeadDict(HeadType):
     def addChild(self, child: HeadType):
         if self.key == None:
             if not isinstance(child, HeadString):
-                raise TableHeadError(self.cell, "unable addchild on this type")
+                raise TableHeadError(self.cell, "Unable addchild on this type")
             self.key = child
         elif self.value == None:
             self.value = child
         else:
-            raise TableHeadError(self.cell, "unable add more child on this cell")
+            raise TableHeadError(self.cell, "Unable add more child on this cell")
 
     def parsetData(self, data: list[Cell], enable: bool) -> data:
         if enable:
