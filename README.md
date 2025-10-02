@@ -234,8 +234,21 @@ pip install -e ".[dev]"
 ### 运行测试
 
 ```bash
+# 运行所有测试
 python -m unittest discover tests -v
+
+# 运行特定测试模块
+python -m unittest tests.test_parsing -v
+python -m unittest tests.test_errors -v
 ```
+
+### 测试结构
+
+测试文件按功能组织：
+
+- `tests/test_base.py` - 测试基础工具类和 fixtures
+- `tests/test_parsing.py` - Excel 解析和 JSON 格式化测试
+- `tests/test_errors.py` - 错误处理和验证测试
 
 ### 项目结构
 
@@ -251,7 +264,9 @@ stdem/
 ├── tests/
 │   ├── excel/               # 测试 Excel 文件
 │   ├── json/                # 预期 JSON 结果
-│   └── test_parser.py       # 测试用例
+│   ├── test_base.py         # 测试基础工具
+│   ├── test_parsing.py      # 解析功能测试
+│   └── test_errors.py       # 错误处理测试
 ├── pyproject.toml
 └── README.md
 ```
