@@ -4,9 +4,15 @@ import os
 import sys
 from typing import Tuple
 from pathlib import Path
+from importlib.metadata import version, PackageNotFoundError
 
 from . import ExcelParser
 from .TableException import TableException
+
+try:
+    __version__ = version("stdem")
+except PackageNotFoundError:
+    __version__ = "unknown"
 
 
 def main():
@@ -26,7 +32,7 @@ def main():
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 0.1.1"
+        version=f"%(prog)s {__version__}"
     )
 
     # Create subparsers for different commands
