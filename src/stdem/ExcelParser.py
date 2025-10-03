@@ -3,10 +3,11 @@ from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.cell import Cell
 import json
 import os
+from typing import Optional
 
 from . import HeadType
 from .TableException import (
-    FileNotFoundError as TableFileNotFoundError,
+    TableFileNotFoundError,
     InvalidFileFormatError,
     EmptyFileError,
     MissingHeaderMarkerError,
@@ -16,11 +17,11 @@ from .TableException import (
 
 class Head:
 
-    def __init__(self, sheet: Worksheet, row: tuple[Cell, ...], filename: str = None) -> None:
+    def __init__(self, sheet: Worksheet, row: tuple[Cell, ...], filename: Optional[str] = None) -> None:
         self.sheet = sheet
         self.column = len(row)
         self.filename = filename
-        self.head = HeadType.headCreater(row[0], filename)
+        self.head = HeadType.headCreator(row[0], filename)
         self.headList: list[HeadType.HeadType] = [self.head] * self.column
 
     def getCellMaxCol(self, cell: Cell) -> int:
@@ -33,7 +34,7 @@ class Head:
         i = 0
         while i < self.column:
             if row[i].value:
-                h = HeadType.headCreater(row[i], self.filename)
+                h = HeadType.headCreator(row[i], self.filename)
                 j = self.getCellMaxCol(row[i])
                 self.headList[i].addChild(h)
                 self.headList[i:j] = [h] * (j - i)
@@ -91,11 +92,11 @@ def getData(filename: str) -> HeadType.data:
             continue
         elif row[0].value == "#data":
             isData = True
-            dataRoot = head.head.parsetData(row[1:], True, filename)
+            dataRoot = head.head.parseData(row[1:], True, filename)
             continue
 
         if isData:
-            head.head.parsetData(row[1:], False, filename)
+            head.head.parseData(row[1:], False, filename)
         else:
             head.rowParser(row[1:])
 

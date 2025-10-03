@@ -1,5 +1,5 @@
 from openpyxl.cell import Cell
-from typing import Optional
+from typing import Optional, Any
 
 
 class TableException(Exception):
@@ -24,7 +24,7 @@ class FileError(TableException):
     pass
 
 
-class FileNotFoundError(FileError):
+class TableFileNotFoundError(FileError):
     """File does not exist"""
     def __init__(self, filename: str) -> None:
         super().__init__(f"File not found: {filename}", filename=filename)
@@ -114,7 +114,7 @@ class UnexpectedDataError(TableDataError):
 
 class TypeConversionError(TableDataError):
     """Failed to convert data to expected type"""
-    def __init__(self, cell: Cell, value: any, target_type: str, error: Exception, filename: Optional[str] = None) -> None:
+    def __init__(self, cell: Cell, value: Any, target_type: str, error: Exception, filename: Optional[str] = None) -> None:
         super().__init__(
             f"Cannot convert '{value}' to {target_type}: {str(error)}",
             cell=cell,
