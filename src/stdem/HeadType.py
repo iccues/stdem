@@ -36,6 +36,31 @@ class HeadType:
         elif data[self.column].value is not None:
             raise UnexpectedDataError(data[self.column], filename)
 
+    def _validate_and_convert(self, cell: Cell, enable: bool, filename: Optional[str] = None):
+        """Helper method to validate cell data and handle conversion
+
+        Args:
+            cell: The cell to validate
+            enable: Whether data is expected in this cell
+            filename: Optional filename for error reporting
+
+        Returns:
+            Tuple of (should_process, cell_value) where should_process indicates
+            if conversion should proceed and cell_value is the raw value
+
+        Raises:
+            UnexpectedDataError: If data found when enable=False
+        """
+        if enable:
+            if cell.value is not None:
+                return True, cell.value
+            else:
+                return False, None
+        else:
+            if cell.value is not None:
+                raise UnexpectedDataError(cell, filename)
+            return False, None
+
     def __repr__(self) -> str:
         return self.name
 
@@ -44,64 +69,55 @@ class HeadType:
 class HeadInt(HeadType):
 
     def parseData(self, data: list[Cell], enable: bool, filename: Optional[str] = None) -> data:
-        if enable:
-            if data[self.column].value is not None:
-                try:
-                    return int(data[self.column].value)
-                except (ValueError, TypeError) as e:
-                    raise TypeConversionError(
-                        data[self.column],
-                        data[self.column].value,
-                        "int",
-                        e,
-                        filename
-                    )
-            else:
-                return None
-        elif data[self.column].value is not None:
-            raise UnexpectedDataError(data[self.column], filename)
+        should_process, value = self._validate_and_convert(data[self.column], enable, filename)
+        if should_process:
+            try:
+                return int(value)
+            except (ValueError, TypeError) as e:
+                raise TypeConversionError(
+                    data[self.column],
+                    value,
+                    "int",
+                    e,
+                    filename
+                )
+        return None
 
 
 class HeadString(HeadType):
 
     def parseData(self, data: list[Cell], enable: bool, filename: Optional[str] = None) -> data:
-        if enable:
-            if data[self.column].value is not None:
-                try:
-                    return str(data[self.column].value)
-                except Exception as e:
-                    raise TypeConversionError(
-                        data[self.column],
-                        data[self.column].value,
-                        "string",
-                        e,
-                        filename
-                    )
-            else:
-                return None
-        elif data[self.column].value is not None:
-            raise UnexpectedDataError(data[self.column], filename)
+        should_process, value = self._validate_and_convert(data[self.column], enable, filename)
+        if should_process:
+            try:
+                return str(value)
+            except Exception as e:
+                raise TypeConversionError(
+                    data[self.column],
+                    value,
+                    "string",
+                    e,
+                    filename
+                )
+        return None
 
 
 class HeadFloat(HeadType):
 
     def parseData(self, data: list[Cell], enable: bool, filename: Optional[str] = None) -> data:
-        if enable:
-            if data[self.column].value is not None:
-                try:
-                    return float(data[self.column].value)
-                except (ValueError, TypeError) as e:
-                    raise TypeConversionError(
-                        data[self.column],
-                        data[self.column].value,
-                        "float",
-                        e,
-                        filename
-                    )
-            else:
-                return None
-        elif data[self.column].value is not None:
-            raise UnexpectedDataError(data[self.column], filename)
+        should_process, value = self._validate_and_convert(data[self.column], enable, filename)
+        if should_process:
+            try:
+                return float(value)
+            except (ValueError, TypeError) as e:
+                raise TypeConversionError(
+                    data[self.column],
+                    value,
+                    "float",
+                    e,
+                    filename
+                )
+        return None
 
 
 
