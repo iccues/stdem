@@ -6,8 +6,8 @@ from typing import Tuple
 from pathlib import Path
 from importlib.metadata import version, PackageNotFoundError
 
-from . import ExcelParser
-from .TableException import TableException
+from . import excel_parser
+from .exceptions import TableError
 
 import traceback
 import json
@@ -162,7 +162,7 @@ def validate_command(args):
         sys.exit(1)
 
     try:
-        data = ExcelParser.getData(str(file_path))
+        data = excel_parser.get_data(str(file_path))
         print(f"[OK] {file_path.name} is valid!")
 
         if args.verbose:
@@ -174,7 +174,7 @@ def validate_command(args):
                 print(f"... ({len(lines) - 20} more lines)")
 
         sys.exit(0)
-    except TableException as e:
+    except TableError as e:
         print(f"[ERROR] Validation failed: {e}", file=sys.stderr)
         if args.verbose:
             traceback.print_exc()
@@ -273,18 +273,18 @@ def parse_file(
         True if successful, False otherwise
     """
     try:
-        jsonStr = ExcelParser.getJson(excel_file, indent=indent)
+        json_str = excel_parser.get_json(excel_file, indent=indent)
 
         # Ensure output directory exists
         os.makedirs(os.path.dirname(json_file) or ".", exist_ok=True)
 
         with open(json_file, "w", encoding="utf-8") as file:
-            file.write(jsonStr)
+            file.write(json_str)
 
         if not quiet:
             print("[OK] Success!")
         return True
-    except TableException as e:
+    except TableError as e:
         # Handle our custom exceptions with detailed error messages
         print(f"[ERROR] {e}", file=sys.stderr)
         if verbose:

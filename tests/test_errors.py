@@ -4,7 +4,7 @@ Tests for error handling and validation
 
 import unittest
 from src import stdem
-from src.stdem.TableException import (
+from stdem.exceptions import (
     TableFileNotFoundError,
     InvalidFileFormatError,
     MissingHeaderMarkerError,
