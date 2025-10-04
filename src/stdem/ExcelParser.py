@@ -11,13 +11,14 @@ from .TableException import (
     InvalidFileFormatError,
     EmptyFileError,
     MissingHeaderMarkerError,
-    MissingDataMarkerError
+    MissingDataMarkerError,
 )
 
 
 class Head:
-
-    def __init__(self, sheet: Worksheet, row: tuple[Cell, ...], filename: Optional[str] = None) -> None:
+    def __init__(
+        self, sheet: Worksheet, row: tuple[Cell, ...], filename: Optional[str] = None
+    ) -> None:
         self.sheet = sheet
         self.column = len(row)
         self.filename = filename
@@ -51,7 +52,7 @@ def getData(filename: str) -> HeadType.data:
     if not os.path.exists(filename):
         raise TableFileNotFoundError(filename)
 
-    if not filename.lower().endswith(('.xlsx', '.xlsm')):
+    if not filename.lower().endswith((".xlsx", ".xlsm")):
         raise InvalidFileFormatError(filename)
 
     # Load workbook
@@ -75,9 +76,7 @@ def getData(filename: str) -> HeadType.data:
     first_cell = first_row[0]
     if first_cell.value != "#head":
         raise MissingHeaderMarkerError(
-            first_cell,
-            str(first_cell.value) if first_cell.value else "empty",
-            filename
+            first_cell, str(first_cell.value) if first_cell.value else "empty", filename
         )
 
     # Parse header

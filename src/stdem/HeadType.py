@@ -7,14 +7,13 @@ from .TableException import (
     ChildAdditionError,
     UnexpectedDataError,
     TypeConversionError,
-    InvalidIndexError
+    InvalidIndexError,
 )
 
 type data = int | float | str | dict[str, data] | list[data] | None
 
 
 class HeadType:
-
     def __init__(self, name: str, cell: Cell) -> None:
         self.name = name
         self.cell = cell
@@ -22,12 +21,12 @@ class HeadType:
 
     def addChild(self, child: "HeadType"):
         raise ChildAdditionError(
-            self.cell,
-            self.__class__.__name__,
-            "This type does not support children"
+            self.cell, self.__class__.__name__, "This type does not support children"
         )
 
-    def parseData(self, data: list[Cell], enable: bool, filename: Optional[str] = None) -> data:
+    def parseData(
+        self, data: list[Cell], enable: bool, filename: Optional[str] = None
+    ) -> data:
         if enable:
             if data[self.column].value is not None:
                 return data[self.column].value
@@ -36,7 +35,9 @@ class HeadType:
         elif data[self.column].value is not None:
             raise UnexpectedDataError(data[self.column], filename)
 
-    def _validate_and_convert(self, cell: Cell, enable: bool, filename: Optional[str] = None):
+    def _validate_and_convert(
+        self, cell: Cell, enable: bool, filename: Optional[str] = None
+    ):
         """Helper method to validate cell data and handle conversion
 
         Args:
@@ -65,64 +66,56 @@ class HeadType:
         return self.name
 
 
-
 class HeadInt(HeadType):
-
-    def parseData(self, data: list[Cell], enable: bool, filename: Optional[str] = None) -> data:
-        should_process, value = self._validate_and_convert(data[self.column], enable, filename)
+    def parseData(
+        self, data: list[Cell], enable: bool, filename: Optional[str] = None
+    ) -> data:
+        should_process, value = self._validate_and_convert(
+            data[self.column], enable, filename
+        )
         if should_process:
             try:
                 return int(value)
             except (ValueError, TypeError) as e:
-                raise TypeConversionError(
-                    data[self.column],
-                    value,
-                    "int",
-                    e,
-                    filename
-                )
+                raise TypeConversionError(data[self.column], value, "int", e, filename)
         return None
 
 
 class HeadString(HeadType):
-
-    def parseData(self, data: list[Cell], enable: bool, filename: Optional[str] = None) -> data:
-        should_process, value = self._validate_and_convert(data[self.column], enable, filename)
+    def parseData(
+        self, data: list[Cell], enable: bool, filename: Optional[str] = None
+    ) -> data:
+        should_process, value = self._validate_and_convert(
+            data[self.column], enable, filename
+        )
         if should_process:
             try:
                 return str(value)
             except Exception as e:
                 raise TypeConversionError(
-                    data[self.column],
-                    value,
-                    "string",
-                    e,
-                    filename
+                    data[self.column], value, "string", e, filename
                 )
         return None
 
 
 class HeadFloat(HeadType):
-
-    def parseData(self, data: list[Cell], enable: bool, filename: Optional[str] = None) -> data:
-        should_process, value = self._validate_and_convert(data[self.column], enable, filename)
+    def parseData(
+        self, data: list[Cell], enable: bool, filename: Optional[str] = None
+    ) -> data:
+        should_process, value = self._validate_and_convert(
+            data[self.column], enable, filename
+        )
         if should_process:
             try:
                 return float(value)
             except (ValueError, TypeError) as e:
                 raise TypeConversionError(
-                    data[self.column],
-                    value,
-                    "float",
-                    e,
-                    filename
+                    data[self.column], value, "float", e, filename
                 )
         return None
 
 
-
 class HeadList(HeadType):
-
     def __init__(self, name: str, cell: Cell) -> None:
         super().__init__(name, cell)
         self.key: HeadInt = None
@@ -132,27 +125,27 @@ class HeadList(HeadType):
         if self.key is None:
             if not isinstance(child, HeadInt):
                 raise ChildAdditionError(
-                    self.cell,
-                    "HeadList",
-                    "First child must be HeadInt (list index)"
+                    self.cell, "HeadList", "First child must be HeadInt (list index)"
                 )
             self.key = child
         elif self.value is None:
             self.value = child
         else:
             raise ChildAdditionError(
-                self.cell,
-                "HeadList",
-                "List can only have 2 children (index and value)"
+                self.cell, "HeadList", "List can only have 2 children (index and value)"
             )
 
-    def parseData(self, data: list[Cell], enable: bool, filename: Optional[str] = None) -> data:
+    def parseData(
+        self, data: list[Cell], enable: bool, filename: Optional[str] = None
+    ) -> data:
         if enable:
             self.data = []
         key = self.key.parseData(data, True, filename)
         if key is not None:
             if key != len(self.data):
-                raise InvalidIndexError(data[self.column], len(self.data), key, filename)
+                raise InvalidIndexError(
+                    data[self.column], len(self.data), key, filename
+                )
             self.data.append(self.value.parseData(data, True, filename))
         else:
             self.value.parseData(data, False, filename)
@@ -161,7 +154,6 @@ class HeadList(HeadType):
 
 
 class HeadDict(HeadType):
-
     def __init__(self, name: str, cell: Cell) -> None:
         super().__init__(name, cell)
         self.key: HeadString = None
@@ -171,21 +163,19 @@ class HeadDict(HeadType):
         if self.key is None:
             if not isinstance(child, HeadString):
                 raise ChildAdditionError(
-                    self.cell,
-                    "HeadDict",
-                    "First child must be HeadString (dict key)"
+                    self.cell, "HeadDict", "First child must be HeadString (dict key)"
                 )
             self.key = child
         elif self.value is None:
             self.value = child
         else:
             raise ChildAdditionError(
-                self.cell,
-                "HeadDict",
-                "Dict can only have 2 children (key and value)"
+                self.cell, "HeadDict", "Dict can only have 2 children (key and value)"
             )
 
-    def parseData(self, data: list[Cell], enable: bool, filename: Optional[str] = None) -> data:
+    def parseData(
+        self, data: list[Cell], enable: bool, filename: Optional[str] = None
+    ) -> data:
         if enable:
             self.data = {}
         key = self.key.parseData(data, True, filename)
@@ -198,7 +188,6 @@ class HeadDict(HeadType):
 
 
 class HeadClass(HeadType):
-
     def __init__(self, name: str, cell: Cell) -> None:
         super().__init__(name, cell)
         self.children: list[HeadType] = []
@@ -206,7 +195,9 @@ class HeadClass(HeadType):
     def addChild(self, child: "HeadType"):
         self.children.append(child)
 
-    def parseData(self, data: list[Cell], enable: bool, filename: Optional[str] = None) -> data:
+    def parseData(
+        self, data: list[Cell], enable: bool, filename: Optional[str] = None
+    ) -> data:
         if enable:
             ret = {}
             for i in self.children:
@@ -217,15 +208,15 @@ class HeadClass(HeadType):
                 i.parseData(data, False, filename)
 
 
-
 typeDict: dict[str, type[HeadType]] = {
-    "int" : HeadInt,
-    "string" : HeadString,
-    "float" : HeadFloat,
-    "list" : HeadList,
-    "dict" : HeadDict,
-    "class" : HeadClass
+    "int": HeadInt,
+    "string": HeadString,
+    "float": HeadFloat,
+    "list": HeadList,
+    "dict": HeadDict,
+    "class": HeadClass,
 }
+
 
 def headCreator(cell: Cell, filename: Optional[str] = None) -> HeadType:
     """Create a HeadType instance from a cell
@@ -245,26 +236,17 @@ def headCreator(cell: Cell, filename: Optional[str] = None) -> HeadType:
 
     if ":" not in cell_value:
         raise InvalidHeaderFormatError(
-            cell,
-            f"Header must be in format 'name:type', got: '{cell_value}'",
-            filename
+            cell, f"Header must be in format 'name:type', got: '{cell_value}'", filename
         )
 
     try:
         name, typeName = cell_value.split(":", 1)
     except ValueError as e:
         raise InvalidHeaderFormatError(
-            cell,
-            f"Invalid header format: {str(e)}",
-            filename
+            cell, f"Invalid header format: {str(e)}", filename
         )
 
     if typeName not in typeDict:
-        raise InvalidTypeNameError(
-            cell,
-            typeName,
-            list(typeDict.keys()),
-            filename
-        )
+        raise InvalidTypeNameError(cell, typeName, list(typeDict.keys()), filename)
 
     return typeDict[typeName](name, cell)

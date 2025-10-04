@@ -1,16 +1,16 @@
 """
 Tests for error handling and validation
 """
+
 import unittest
 from src import stdem
 from src.stdem.TableException import (
     TableFileNotFoundError,
     InvalidFileFormatError,
-    EmptyFileError,
     MissingHeaderMarkerError,
     MissingDataMarkerError,
     InvalidTypeNameError,
-    InvalidHeaderFormatError
+    InvalidHeaderFormatError,
 )
 from tests.test_base import BaseTestCase, TemporaryExcelFile
 
@@ -41,9 +41,10 @@ class TestHeaderErrors(BaseTestCase):
 
     def test_missing_head_marker(self):
         """Test that file without #head marker raises error"""
+
         def setup(wb, ws):
-            ws['A1'] = 'invalid'
-            ws['B1'] = 'name:string'
+            ws["A1"] = "invalid"
+            ws["B1"] = "name:string"
 
         with TemporaryExcelFile("test_no_head.xlsx", setup) as test_file:
             with self.assertRaises(MissingHeaderMarkerError) as context:
@@ -52,9 +53,10 @@ class TestHeaderErrors(BaseTestCase):
 
     def test_invalid_type_name(self):
         """Test that invalid type name raises error"""
+
         def setup(wb, ws):
-            ws['A1'] = '#head'
-            ws['B1'] = 'name:invalid_type'
+            ws["A1"] = "#head"
+            ws["B1"] = "name:invalid_type"
 
         with TemporaryExcelFile("test_invalid_type.xlsx", setup) as test_file:
             with self.assertRaises(InvalidTypeNameError) as context:
@@ -63,9 +65,10 @@ class TestHeaderErrors(BaseTestCase):
 
     def test_invalid_header_format(self):
         """Test that header without colon raises error"""
+
         def setup(wb, ws):
-            ws['A1'] = '#head'
-            ws['B1'] = 'namestring'  # Missing colon
+            ws["A1"] = "#head"
+            ws["B1"] = "namestring"  # Missing colon
 
         with TemporaryExcelFile("test_invalid_format.xlsx", setup) as test_file:
             with self.assertRaises(InvalidHeaderFormatError) as context:
@@ -78,9 +81,10 @@ class TestDataErrors(BaseTestCase):
 
     def test_missing_data_marker(self):
         """Test that file without #data marker raises error"""
+
         def setup(wb, ws):
-            ws['A1'] = '#head'
-            ws['B1'] = 'name:string'
+            ws["A1"] = "#head"
+            ws["B1"] = "name:string"
             # No #data row
 
         with TemporaryExcelFile("test_no_data.xlsx", setup) as test_file:
