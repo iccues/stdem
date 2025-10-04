@@ -1,7 +1,7 @@
 [project]
 name = "stdem"
 version = "0.2.1"
-description = "Add your description here"
+description = "A powerful tool for converting Excel spreadsheets into JSON data with complex hierarchical structures"
 readme = "README.md"
 requires-python = ">=3.12"
 classifiers = [

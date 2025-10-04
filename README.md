@@ -4,9 +4,9 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/stdem)](https://pypi.org/project/stdem/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/stdem)
 
-**S**preadSheet **T**o **D**ata **E**xchange **M**ethods
-
 将 Excel 表格转换为具有复杂层次结构的 JSON 数据的强大工具。
+
+中文文档 | [English](README_EN.md)
 
 ## ✨ 特性
 
@@ -109,17 +109,17 @@ stdem --version
 ### Python API 使用
 
 ```python
-from stdem import ExcelParser
+from stdem import excel_parser
 
 # 解析单个文件为 Python 对象
-data = ExcelParser.getData("example.xlsx")
+data = excel_parser.get_data("example.xlsx")
 
 # 解析单个文件为 JSON 字符串
-json_str = ExcelParser.getJson("example.xlsx")
+json_str = excel_parser.get_json("example.xlsx")
 
 # 批量处理目录
-from stdem import Main
-success, failed = Main.parse_dir("excel/", "json/")
+from stdem import main
+success, failed = main.parse_dir("excel/", "json/")
 print(f"成功: {success}, 失败: {failed}")
 ```
 
