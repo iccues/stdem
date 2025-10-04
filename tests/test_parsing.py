@@ -1,6 +1,7 @@
 """
 Tests for basic Excel parsing functionality
 """
+
 import unittest
 import json
 from src import stdem
@@ -50,7 +51,7 @@ class TestBasicParsing(BaseTestCase):
 class TestJSONFormatting(BaseTestCase):
     """Test JSON output formatting"""
 
-    def test_getJson_returns_formatted_json(self):
+    def test_get_json_returns_formatted_json(self):
         """Test that getJson returns formatted JSON with indentation"""
         json_str = stdem.ExcelParser.getJson("tests/excel/example.xlsx")
 

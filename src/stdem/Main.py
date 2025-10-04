@@ -6,8 +6,12 @@ from typing import Tuple
 from pathlib import Path
 from importlib.metadata import version, PackageNotFoundError
 
-from . import ExcelParser
-from .TableException import TableException
+from . import excel_parser
+from .exceptions import TableError
+
+import traceback
+import json
+
 
 try:
     __version__ = version("stdem")
@@ -21,82 +25,68 @@ def main():
         prog="stdem",
         description="Convert Excel tables to JSON format with complex hierarchical structures",
         epilog="Examples:\n"
-               "  stdem convert input.xlsx -o output.json          # Convert single file\n"
-               "  stdem convert excel_dir/ -o json_dir/            # Convert directory\n"
-               "  stdem convert data/ -o output/ --indent 4        # Custom indentation\n"
-               "  stdem validate config.xlsx                       # Validate Excel file\n"
-               "  stdem --version                                  # Show version",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        "  stdem convert input.xlsx -o output.json          # Convert single file\n"
+        "  stdem convert excel_dir/ -o json_dir/            # Convert directory\n"
+        "  stdem convert data/ -o output/ --indent 4        # Custom indentation\n"
+        "  stdem validate config.xlsx                       # Validate Excel file\n"
+        "  stdem --version                                  # Show version",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
-        "--version",
-        action="version",
-        version=f"%(prog)s {__version__}"
+        "--version", action="version", version=f"%(prog)s {__version__}"
     )
 
     # Create subparsers for different commands
-    subparsers = parser.add_subparsers(
-        dest="command",
-        help="Available commands"
-    )
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Convert command (default)
     convert_parser = subparsers.add_parser(
         "convert",
         help="Convert Excel file(s) to JSON",
-        description="Convert Excel tables to JSON format"
+        description="Convert Excel tables to JSON format",
     )
+    convert_parser.add_argument("input", type=str, help="Input Excel file or directory")
     convert_parser.add_argument(
-        "input",
-        type=str,
-        help="Input Excel file or directory"
-    )
-    convert_parser.add_argument(
-        "-o", "--output",
+        "-o",
+        "--output",
         type=str,
         required=True,
         metavar="PATH",
-        help="Output JSON file or directory (required)"
+        help="Output JSON file or directory (required)",
     )
     convert_parser.add_argument(
-        "-i", "--indent",
+        "-i",
+        "--indent",
         type=int,
         default=2,
         metavar="N",
-        help="JSON indentation spaces (default: 2)"
+        help="JSON indentation spaces (default: 2)",
     )
     convert_parser.add_argument(
         "--no-clear",
         action="store_true",
-        help="Don't clear output directory before conversion"
+        help="Don't clear output directory before conversion",
     )
     convert_parser.add_argument(
-        "-q", "--quiet",
-        action="store_true",
-        help="Suppress output (only show errors)"
+        "-q", "--quiet", action="store_true", help="Suppress output (only show errors)"
     )
     convert_parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Enable verbose error output"
+        "-v", "--verbose", action="store_true", help="Enable verbose error output"
     )
 
     # Validate command
     validate_parser = subparsers.add_parser(
         "validate",
         help="Validate Excel file format",
-        description="Check if Excel file follows stdem format specification"
+        description="Check if Excel file follows stdem format specification",
     )
+    validate_parser.add_argument("file", type=str, help="Excel file to validate")
     validate_parser.add_argument(
-        "file",
-        type=str,
-        help="Excel file to validate"
-    )
-    validate_parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
-        help="Show detailed validation information"
+        help="Show detailed validation information",
     )
 
     args = parser.parse_args()
@@ -132,7 +122,7 @@ def convert_command(args):
                 str(output_path),
                 verbose=args.verbose,
                 indent=args.indent,
-                quiet=args.quiet
+                quiet=args.quiet,
             )
             sys.exit(0 if success else 1)
 
@@ -144,10 +134,12 @@ def convert_command(args):
                 verbose=args.verbose,
                 indent=args.indent,
                 clear_output=not args.no_clear,
-                quiet=args.quiet
+                quiet=args.quiet,
             )
             if not args.quiet:
-                print(f"\n[DONE] Processing complete: {stats[0]} succeeded, {stats[1]} failed")
+                print(
+                    f"\n[DONE] Processing complete: {stats[0]} succeeded, {stats[1]} failed"
+                )
             sys.exit(0 if stats[1] == 0 else 1)
 
         else:
@@ -157,7 +149,6 @@ def convert_command(args):
     except Exception as e:
         print(f"Fatal error: {e}", file=sys.stderr)
         if args.verbose:
-            import traceback
             traceback.print_exc()
         sys.exit(1)
 
@@ -171,29 +162,26 @@ def validate_command(args):
         sys.exit(1)
 
     try:
-        data = ExcelParser.getData(str(file_path))
+        data = excel_parser.get_data(str(file_path))
         print(f"[OK] {file_path.name} is valid!")
 
         if args.verbose:
-            import json
-            print(f"\nData structure preview:")
+            print("\nData structure preview:")
             preview = json.dumps(data, indent=2, ensure_ascii=False)
-            lines = preview.split('\n')
-            print('\n'.join(lines[:20]))
+            lines = preview.split("\n")
+            print("\n".join(lines[:20]))
             if len(lines) > 20:
                 print(f"... ({len(lines) - 20} more lines)")
 
         sys.exit(0)
-    except TableException as e:
+    except TableError as e:
         print(f"[ERROR] Validation failed: {e}", file=sys.stderr)
         if args.verbose:
-            import traceback
             traceback.print_exc()
         sys.exit(1)
     except Exception as e:
         print(f"[ERROR] Unexpected error: {e}", file=sys.stderr)
         if args.verbose:
-            import traceback
             traceback.print_exc()
         sys.exit(1)
 
@@ -204,7 +192,7 @@ def parse_dir(
     verbose: bool = False,
     indent: int = 2,
     clear_output: bool = True,
-    quiet: bool = False
+    quiet: bool = False,
 ) -> Tuple[int, int]:
     """Parse all Excel files in a directory
 
@@ -237,7 +225,7 @@ def parse_dir(
     if clear_output:
         for filename in os.listdir(json_dir):
             file_path = os.path.join(json_dir, filename)
-            if os.path.isfile(file_path) and filename.endswith('.json'):
+            if os.path.isfile(file_path) and filename.endswith(".json"):
                 os.remove(file_path)
 
     # Process Excel files
@@ -270,7 +258,7 @@ def parse_file(
     json_file: str,
     verbose: bool = False,
     indent: int = 2,
-    quiet: bool = False
+    quiet: bool = False,
 ) -> bool:
     """Parse a single Excel file to JSON
 
@@ -285,28 +273,26 @@ def parse_file(
         True if successful, False otherwise
     """
     try:
-        jsonStr = ExcelParser.getJson(excel_file, indent=indent)
+        json_str = excel_parser.get_json(excel_file, indent=indent)
 
         # Ensure output directory exists
         os.makedirs(os.path.dirname(json_file) or ".", exist_ok=True)
 
         with open(json_file, "w", encoding="utf-8") as file:
-            file.write(jsonStr)
+            file.write(json_str)
 
         if not quiet:
             print("[OK] Success!")
         return True
-    except TableException as e:
+    except TableError as e:
         # Handle our custom exceptions with detailed error messages
         print(f"[ERROR] {e}", file=sys.stderr)
         if verbose:
-            import traceback
             traceback.print_exc()
         return False
     except Exception as e:
         # Handle unexpected errors
         print(f"[ERROR] Unexpected error: {type(e).__name__}: {e}", file=sys.stderr)
         if verbose:
-            import traceback
             traceback.print_exc()
         return False
