@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.scripts]
-stdem = "stdem:main"
+stdem = "stdem.main:main"
 
 [tool.ruff.lint]
 extend-select = ["N"]
