@@ -4,7 +4,7 @@ Tests for error handling and validation
 
 import unittest
 from src import stdem
-from stdem.exceptions import (
+from src.stdem.exceptions import (
     TableFileNotFoundError,
     InvalidFileFormatError,
     MissingHeaderMarkerError,
@@ -21,19 +21,19 @@ class TestFileErrors(BaseTestCase):
     def test_empty_filename(self):
         """Test that empty filename raises ValueError"""
         with self.assertRaises(ValueError) as context:
-            stdem.ExcelParser.getData("")
+            stdem.excel_parser.get_data("")
         self.assertIn("cannot be empty", str(context.exception))
 
     def test_nonexistent_file(self):
         """Test that nonexistent file raises FileNotFoundError"""
         with self.assertRaises(TableFileNotFoundError) as context:
-            stdem.ExcelParser.getData("tests/excel/nonexistent.xlsx")
+            stdem.excel_parser.get_data("tests/excel/nonexistent.xlsx")
         self.assertIn("not found", str(context.exception))
 
     def test_invalid_file_format(self):
         """Test that non-xlsx file raises InvalidFileFormatError"""
         with self.assertRaises(InvalidFileFormatError):
-            stdem.ExcelParser.getData("tests/test_errors.py")
+            stdem.excel_parser.get_data("tests/test_errors.py")
 
 
 class TestHeaderErrors(BaseTestCase):
@@ -48,7 +48,7 @@ class TestHeaderErrors(BaseTestCase):
 
         with TemporaryExcelFile("test_no_head.xlsx", setup) as test_file:
             with self.assertRaises(MissingHeaderMarkerError) as context:
-                stdem.ExcelParser.getData(test_file)
+                stdem.excel_parser.get_data(test_file)
             self.assertIn("#head", str(context.exception))
 
     def test_invalid_type_name(self):
@@ -60,7 +60,7 @@ class TestHeaderErrors(BaseTestCase):
 
         with TemporaryExcelFile("test_invalid_type.xlsx", setup) as test_file:
             with self.assertRaises(InvalidTypeNameError) as context:
-                stdem.ExcelParser.getData(test_file)
+                stdem.excel_parser.get_data(test_file)
             self.assertIn("Invalid type", str(context.exception))
 
     def test_invalid_header_format(self):
@@ -72,7 +72,7 @@ class TestHeaderErrors(BaseTestCase):
 
         with TemporaryExcelFile("test_invalid_format.xlsx", setup) as test_file:
             with self.assertRaises(InvalidHeaderFormatError) as context:
-                stdem.ExcelParser.getData(test_file)
+                stdem.excel_parser.get_data(test_file)
             self.assertIn("format", str(context.exception).lower())
 
 
@@ -89,7 +89,7 @@ class TestDataErrors(BaseTestCase):
 
         with TemporaryExcelFile("test_no_data.xlsx", setup) as test_file:
             with self.assertRaises(MissingDataMarkerError) as context:
-                stdem.ExcelParser.getData(test_file)
+                stdem.excel_parser.get_data(test_file)
             self.assertIn("#data", str(context.exception))
 
 
