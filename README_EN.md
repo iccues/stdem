@@ -148,7 +148,7 @@ Excel files must follow this format:
 
 ### Example: Simple Table
 
-![](https://github.com/iccues/stdem/blob/main/docs/image/example.png)
+![Excel format example](https://github.com/iccues/stdem/blob/main/docs/image/example.png)
 
 Converts to:
 

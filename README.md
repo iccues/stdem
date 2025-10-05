@@ -148,7 +148,7 @@ Excel 文件必须遵循以下格式：
 
 ### 示例：简单表格
 
-![](https://github.com/iccues/stdem/blob/main/docs/image/example.png)
+![Excel 示例表格](https://github.com/iccues/stdem/blob/main/docs/image/example.png)
 
 转换为：
 
