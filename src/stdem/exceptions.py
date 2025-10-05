@@ -1,6 +1,8 @@
 from openpyxl.cell import Cell
 from typing import Optional, Any
 
+from .constants import HEAD_MARKER, DATA_MARKER
+
 
 class TableError(Exception):
     """Base exception for all table-related errors"""
@@ -65,7 +67,7 @@ class MissingHeaderMarkerError(TableHeadError):
         self, cell: Cell, actual_value: str, filename: Optional[str] = None
     ) -> None:
         super().__init__(
-            f"Expected '#head' marker, found: '{actual_value}'",
+            f"Expected '{HEAD_MARKER}' marker, found: '{actual_value}'",
             cell=cell,
             filename=filename,
         )
@@ -122,7 +124,7 @@ class MissingDataMarkerError(TableDataError):
 
     def __init__(self, filename: Optional[str] = None) -> None:
         super().__init__(
-            "No '#data' marker found. Table must have a data section.",
+            f"No '{DATA_MARKER}' marker found. Table must have a data section.",
             filename=filename,
         )
 

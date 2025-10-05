@@ -6,6 +6,7 @@ import os
 from typing import Optional
 
 from . import head_type
+from .constants import HEAD_MARKER, DATA_MARKER, COMMENT_PREFIX
 from .exceptions import (
     TableFileNotFoundError,
     InvalidFileFormatError,
@@ -74,7 +75,7 @@ def get_data(filename: str) -> head_type.data:
 
     # Validate #head marker
     first_cell = first_row[0]
-    if first_cell.value != "#head":
+    if first_cell.value != HEAD_MARKER:
         raise MissingHeaderMarkerError(
             first_cell, str(first_cell.value) if first_cell.value else "empty", filename
         )
@@ -87,9 +88,9 @@ def get_data(filename: str) -> head_type.data:
     data_root = None
 
     for row in iter_rows:
-        if row[0].value == "#":
+        if row[0].value == COMMENT_PREFIX:
             continue
-        elif row[0].value == "#data":
+        elif row[0].value == DATA_MARKER:
             is_data = True
             data_root = head.head.parse_data(row[1:], True, filename)
             continue

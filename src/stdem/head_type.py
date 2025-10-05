@@ -1,6 +1,7 @@
 from openpyxl.cell import Cell
 from typing import Optional
 
+from .constants import VALID_TYPES
 from .exceptions import (
     InvalidTypeNameError,
     InvalidHeaderFormatError,
@@ -246,7 +247,7 @@ def head_creator(cell: Cell, filename: Optional[str] = None) -> HeadType:
             cell, f"Invalid header format: {str(e)}", filename
         )
 
-    if type_name not in TYPE_DICT:
-        raise InvalidTypeNameError(cell, type_name, list(TYPE_DICT.keys()), filename)
+    if type_name not in VALID_TYPES:
+        raise InvalidTypeNameError(cell, type_name, list(VALID_TYPES), filename)
 
     return TYPE_DICT[type_name](name, cell)
