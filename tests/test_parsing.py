@@ -20,6 +20,16 @@ class TestBasicParsing(BaseTestCase):
 
         self.assertEqual(result, expected)
 
+    def test_example_object_excel(self):
+        """Test parsing example-object.xlsx and compare with expected JSON"""
+        result = stdem.excel_parser.get_data("tests/excel/example-object.xlsx")
+
+        with open("tests/json/example.json", "r", encoding="utf-8") as f:
+            expected = json.load(f)
+
+        self.assertEqual(result, expected)
+
+
     def test_unit_data_excel(self):
         """Test parsing UnitData.xlsx and compare with expected JSON"""
         result = stdem.excel_parser.get_data("tests/excel/UnitData.xlsx")

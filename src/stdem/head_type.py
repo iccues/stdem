@@ -20,7 +20,7 @@ class HeadType:
 
     Header types are used to define the data type and structure of Excel columns, supporting:
     - Basic types: int, float, string
-    - Complex types: list, dict, class (nested objects)
+    - Complex types: list, dict, object
 
     Attributes:
         name: Field name
@@ -43,7 +43,7 @@ class HeadType:
     def add_child(self, child: "HeadType") -> None:
         """Add child header (for complex types)
 
-        Base class does not support child headers, only HeadList, HeadDict, HeadClass support it
+        Base class does not support child headers, only HeadList, HeadDict, HeadObject support it
 
         Args:
             child: Child header object
@@ -322,25 +322,25 @@ class HeadDict(HeadType):
         return None
 
 
-class HeadClass(HeadType):
-    """Class (nested object) type header
+class HeadObject(HeadType):
+    """Object type header
 
-    Class type is used to represent nested object structures, can contain multiple child fields
-    Each child field can be any type (including other class types, forming multi-level nesting)
+    Object type is used to represent nested object structures, can contain multiple child fields
+    Each child field can be any type (including other object types, forming multi-level nesting)
 
     Attributes:
         children: List of child fields, each child field is a HeadType object
     """
 
     def __init__(self, name: str, cell: Cell) -> None:
-        """Initialize class type header"""
+        """Initialize object type header"""
         super().__init__(name, cell)
         self.children: list[HeadType] = []
 
     def add_child(self, child: "HeadType") -> None:
         """Add child field
 
-        Class type can add any number of child fields
+        Object type can add any number of child fields
 
         Args:
             child: Header object of the child field
@@ -350,7 +350,7 @@ class HeadClass(HeadType):
     def parse_data(
         self, data: list[Cell], enable: bool, filename: Optional[str] = None
     ) -> data:
-        """Parse class data
+        """Parse object data
 
         Combine all child field data into a dictionary object
         """
@@ -374,7 +374,8 @@ TYPE_DICT: dict[str, type[HeadType]] = {
     "float": HeadFloat,
     "list": HeadList,
     "dict": HeadDict,
-    "class": HeadClass,
+    "object": HeadObject,
+    "class": HeadObject,  # Deprecated: kept for backward compatibility, use 'object' instead
 }
 
 

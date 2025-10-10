@@ -48,7 +48,7 @@ class Head:
         self.sheet = sheet
         self.column = len(row)
         self.filename = filename
-        # Create root header object (usually HeadClass type)
+        # Create root header object (usually HeadObject type)
         self.head = head_type.head_creator(row[0], filename)
         # Initialize header list, each column points to the root header
         self.head_list: list[head_type.HeadType] = [self.head] * self.column
