@@ -1,3 +1,10 @@
+"""stdem command-line tool main module
+
+Provides command-line interface for:
+- Converting Excel files to JSON (single file or batch)
+- Validating Excel file format
+"""
+
 import argparse
 import glob
 import os
@@ -12,7 +19,7 @@ from .exceptions import TableError
 import traceback
 import json
 
-
+# Get package version number
 try:
     __version__ = version("stdem")
 except PackageNotFoundError:

@@ -11,16 +11,46 @@ from .exceptions import (
     InvalidIndexError,
 )
 
+# Data type definition: supports complex nested structures
 type data = int | float | str | dict[str, data] | list[data] | None
 
 
 class HeadType:
+    """Base class for header types, defining the common interface for all header types
+
+    Header types are used to define the data type and structure of Excel columns, supporting:
+    - Basic types: int, float, string
+    - Complex types: list, dict, class (nested objects)
+
+    Attributes:
+        name: Field name
+        cell: Corresponding Excel cell
+        column: Data column index (relative to header start position)
+    """
+
     def __init__(self, name: str, cell: Cell) -> None:
+        """Initialize header type
+
+        Args:
+            name: Field name
+            cell: Excel cell reference
+        """
         self.name = name
         self.cell = cell
+        # column is the index of data in the row, subtract 2 because the first column is the marker column, data starts from the second column
         self.column = cell.column - 2
 
-    def add_child(self, child: "HeadType"):
+    def add_child(self, child: "HeadType") -> None:
+        """Add child header (for complex types)
+
+        Base class does not support child headers, only HeadList, HeadDict, HeadClass support it
+
+        Args:
+            child: Child header object
+
+        Raises:
+            ChildAdditionError: Current type does not support adding child nodes
+        """
         raise ChildAdditionError(
             self.cell, self.__class__.__name__, "This type does not support children"
         )
@@ -28,13 +58,30 @@ class HeadType:
     def parse_data(
         self, data: list[Cell], enable: bool, filename: Optional[str] = None
     ) -> data:
+        """Parse cell data
+
+        Args:
+            data: List of cells in the data row
+            enable: Whether to enable data parsing (True extracts data, False only validates)
+            filename: Optional filename for error reporting
+
+        Returns:
+            Parsed data value, returns None if enable=False or cell is empty
+
+        Raises:
+            UnexpectedDataError: Raised when enable=False but cell has data
+        """
         if enable:
+            # Enable mode: extract and return data
             if data[self.column].value is not None:
                 return data[self.column].value
             else:
                 return None
         elif data[self.column].value is not None:
+            # Disable mode but has data: indicates data structure error
             raise UnexpectedDataError(data[self.column], filename)
+        # Disable mode and no data: normal case
+        return None
 
     def _validate_and_convert(
         self, cell: Cell, enable: bool, filename: Optional[str] = None
@@ -42,16 +89,16 @@ class HeadType:
         """Helper method to validate cell data and handle conversion
 
         Args:
-            cell: The cell to validate
-            enable: Whether data is expected in this cell
+            cell: Cell to validate
+            enable: Whether to expect data in this cell
             filename: Optional filename for error reporting
 
         Returns:
-            Tuple of (should_process, cell_value) where should_process indicates
-            if conversion should proceed and cell_value is the raw value
+            Returns tuple (should_process, cell_value), where should_process indicates
+            whether to continue conversion, cell_value is the original value
 
         Raises:
-            UnexpectedDataError: If data found when enable=False
+            UnexpectedDataError: Raised when enable=False but data is found
         """
         if enable:
             if cell.value is not None:
@@ -68,24 +115,30 @@ class HeadType:
 
 
 class HeadInt(HeadType):
+    """Integer type header"""
+
     def parse_data(
         self, data: list[Cell], enable: bool, filename: Optional[str] = None
     ) -> data:
+        """Parse integer data"""
         should_process, value = self._validate_and_convert(
             data[self.column], enable, filename
         )
         if should_process:
             try:
                 return int(value)
-            except (ValueError, TypeError) as e:
+            except Exception as e:
                 raise TypeConversionError(data[self.column], value, "int", e, filename)
         return None
 
 
 class HeadString(HeadType):
+    """String type header"""
+
     def parse_data(
         self, data: list[Cell], enable: bool, filename: Optional[str] = None
     ) -> data:
+        """Parse string data"""
         should_process, value = self._validate_and_convert(
             data[self.column], enable, filename
         )
@@ -100,16 +153,19 @@ class HeadString(HeadType):
 
 
 class HeadFloat(HeadType):
+    """Float type header"""
+
     def parse_data(
         self, data: list[Cell], enable: bool, filename: Optional[str] = None
     ) -> data:
+        """Parse float data"""
         should_process, value = self._validate_and_convert(
             data[self.column], enable, filename
         )
         if should_process:
             try:
                 return float(value)
-            except (ValueError, TypeError) as e:
+            except Exception as e:
                 raise TypeConversionError(
                     data[self.column], value, "float", e, filename
                 )
@@ -117,21 +173,47 @@ class HeadFloat(HeadType):
 
 
 class HeadList(HeadType):
-    def __init__(self, name: str, cell: Cell) -> None:
-        super().__init__(name, cell)
-        self.key: HeadInt = None
-        self.value: HeadType = None
+    """List type header
 
-    def add_child(self, child: HeadType):
+    List requires two child columns:
+    1. Index column (must be HeadInt) - used to specify element order
+    2. Value column (any type) - actual value of list element
+
+    Attributes:
+        key: Header of index column (HeadInt type)
+        value: Header of value column (any HeadType type)
+        data: Accumulated list data
+    """
+
+    def __init__(self, name: str, cell: Cell) -> None:
+        """Initialize list type header"""
+        super().__init__(name, cell)
+        self.key: HeadInt = None  # Index column
+        self.value: HeadType = None  # Value column
+
+    def add_child(self, child: HeadType) -> None:
+        """Add child header
+
+        Must be added in order: index column first, then value column
+
+        Args:
+            child: Child header object
+
+        Raises:
+            ChildAdditionError: Child header type error or count exceeds limit
+        """
         if self.key is None:
+            # First child node must be integer type (used as index)
             if not isinstance(child, HeadInt):
                 raise ChildAdditionError(
                     self.cell, "HeadList", "First child must be HeadInt (list index)"
                 )
             self.key = child
         elif self.value is None:
+            # Second child node is the value type
             self.value = child
         else:
+            # List can only have two child nodes
             raise ChildAdditionError(
                 self.cell, "HeadList", "List can only have 2 children (index and value)"
             )
@@ -139,37 +221,75 @@ class HeadList(HeadType):
     def parse_data(
         self, data: list[Cell], enable: bool, filename: Optional[str] = None
     ) -> data:
+        """Parse list data
+
+        List data is built by accumulating multiple rows, each row adds one element
+        Index must be consecutive (0, 1, 2, ...)
+        """
         if enable:
+            # First enable: initialize empty list
             self.data = []
+
+        # Parse index value
         key = self.key.parse_data(data, True, filename)
         if key is not None:
+            # Has index value: validate index continuity and add element
             if key != len(self.data):
                 raise InvalidIndexError(
                     data[self.column], len(self.data), key, filename
                 )
             self.data.append(self.value.parse_data(data, True, filename))
         else:
+            # No index value: only validate that value column should not have data
             self.value.parse_data(data, False, filename)
+
         if enable:
             return self.data
+        return None
 
 
 class HeadDict(HeadType):
-    def __init__(self, name: str, cell: Cell) -> None:
-        super().__init__(name, cell)
-        self.key: HeadString = None
-        self.value: HeadType = None
+    """Dictionary type header
 
-    def add_child(self, child: HeadType):
+    Dictionary requires two child columns:
+    1. Key column (must be HeadString) - dictionary key
+    2. Value column (any type) - dictionary value
+
+    Attributes:
+        key: Header of key column (HeadString type)
+        value: Header of value column (any HeadType type)
+        data: Accumulated dictionary data
+    """
+
+    def __init__(self, name: str, cell: Cell) -> None:
+        """Initialize dictionary type header"""
+        super().__init__(name, cell)
+        self.key: HeadString = None  # Key column
+        self.value: HeadType = None  # Value column
+
+    def add_child(self, child: HeadType) -> None:
+        """Add child header
+
+        Must be added in order: key column first, then value column
+
+        Args:
+            child: Child header object
+
+        Raises:
+            ChildAdditionError: Child header type error or count exceeds limit
+        """
         if self.key is None:
+            # First child node must be string type (used as key)
             if not isinstance(child, HeadString):
                 raise ChildAdditionError(
                     self.cell, "HeadDict", "First child must be HeadString (dict key)"
                 )
             self.key = child
         elif self.value is None:
+            # Second child node is the value type
             self.value = child
         else:
+            # Dictionary can only have two child nodes
             raise ChildAdditionError(
                 self.cell, "HeadDict", "Dict can only have 2 children (key and value)"
             )
@@ -177,38 +297,74 @@ class HeadDict(HeadType):
     def parse_data(
         self, data: list[Cell], enable: bool, filename: Optional[str] = None
     ) -> data:
+        """Parse dictionary data
+
+        Dictionary data is built by accumulating multiple rows, each row adds one key-value pair
+        """
         if enable:
+            # First enable: initialize empty dictionary
             self.data = {}
+
+        # Parse key
         key = self.key.parse_data(data, True, filename)
         if key is not None:
+            # Has key: add key-value pair
             self.data[key] = self.value.parse_data(data, True, filename)
         else:
+            # No key: only validate that value column should not have data
             self.value.parse_data(data, False, filename)
+
         if enable:
             return self.data
+        return None
 
 
 class HeadClass(HeadType):
+    """Class (nested object) type header
+
+    Class type is used to represent nested object structures, can contain multiple child fields
+    Each child field can be any type (including other class types, forming multi-level nesting)
+
+    Attributes:
+        children: List of child fields, each child field is a HeadType object
+    """
+
     def __init__(self, name: str, cell: Cell) -> None:
+        """Initialize class type header"""
         super().__init__(name, cell)
         self.children: list[HeadType] = []
 
-    def add_child(self, child: "HeadType"):
+    def add_child(self, child: "HeadType") -> None:
+        """Add child field
+
+        Class type can add any number of child fields
+
+        Args:
+            child: Header object of the child field
+        """
         self.children.append(child)
 
     def parse_data(
         self, data: list[Cell], enable: bool, filename: Optional[str] = None
     ) -> data:
+        """Parse class data
+
+        Combine all child field data into a dictionary object
+        """
         if enable:
+            # Enable mode: parse all child fields and build dictionary
             ret = {}
             for i in self.children:
                 ret[i.name] = i.parse_data(data, True, filename)
             return ret
         else:
+            # Disable mode: only validate all child fields
             for i in self.children:
                 i.parse_data(data, False, filename)
+        return None
 
 
+# Type name to class mapping table, used to create corresponding header objects based on string type names
 TYPE_DICT: dict[str, type[HeadType]] = {
     "int": HeadInt,
     "string": HeadString,
