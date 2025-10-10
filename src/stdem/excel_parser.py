@@ -33,7 +33,7 @@ class Head:
         column: Number of columns
         filename: Filename (for error reporting)
         head: Root header object
-        headList: Header list, each column corresponds to a header object
+        head_list: Header list, each column corresponds to a header object
     """
     def __init__(
         self, sheet: Worksheet, row: tuple[Cell, ...], filename: Optional[str] = None
@@ -51,7 +51,7 @@ class Head:
         # Create root header object (usually HeadClass type)
         self.head = head_type.head_creator(row[0], filename)
         # Initialize header list, each column points to the root header
-        self.headList: list[head_type.HeadType] = [self.head] * self.column
+        self.head_list: list[head_type.HeadType] = [self.head] * self.column
 
     def get_cell_max_col(self, cell: Cell) -> int:
         """Get the maximum column index of a cell
@@ -85,15 +85,33 @@ class Head:
             if row[i].value:
                 h = head_type.head_creator(row[i], self.filename)
                 j = self.get_cell_max_col(row[i])
-                self.headList[i].add_child(h)
-                self.headList[i:j] = [h] * (j - i)
+                self.head_list[i].add_child(h)
+                self.head_list[i:j] = [h] * (j - i)
                 i = j
             else:
                 i += 1
 
 
 def get_data(filename: str) -> head_type.data:
-    """Get parsed data from Excel file"""
+    """Get parsed data from Excel file
+
+    Parses an Excel file with structured headers and data, converting it into
+    a nested Python data structure (dict/list/primitives).
+
+    Args:
+        filename: Path to the Excel file (.xlsx or .xlsm)
+
+    Returns:
+        Parsed data structure matching the header definitions
+
+    Raises:
+        ValueError: If filename is empty
+        TableFileNotFoundError: If file doesn't exist
+        InvalidFileFormatError: If file format is invalid or not .xlsx/.xlsm
+        EmptyFileError: If file or worksheet is empty
+        MissingHeaderMarkerError: If #head marker is missing or invalid
+        MissingDataMarkerError: If #data marker is not found
+    """
     # Validate input
     if not filename:
         raise ValueError("Filename cannot be empty")

@@ -37,7 +37,7 @@ class HeadType:
         """
         self.name = name
         self.cell = cell
-        # column is the index of data in the row, subtract 2 because the first column is the marker column, data starts from the second column
+        # Subtract 2 from column index: column 0 is marker (#head/#data), column 1+ is actual data
         self.column = cell.column - 2
 
     def add_child(self, child: "HeadType") -> None:
@@ -62,43 +62,46 @@ class HeadType:
 
         Args:
             data: List of cells in the data row
-            enable: Whether to enable data parsing (True extracts data, False only validates)
+            enable: If True, extract and return data from this column.
+                   If False, validate that this column is empty (used for columns under
+                   merged headers that shouldn't have data in this row)
             filename: Optional filename for error reporting
 
         Returns:
-            Parsed data value, returns None if enable=False or cell is empty
+            Parsed data value if enable=True and cell has data, otherwise None
 
         Raises:
-            UnexpectedDataError: Raised when enable=False but cell has data
+            UnexpectedDataError: When enable=False but cell contains data
         """
         if enable:
-            # Enable mode: extract and return data
+            # Extract and return data from this column
             if data[self.column].value is not None:
                 return data[self.column].value
             else:
                 return None
         elif data[self.column].value is not None:
-            # Disable mode but has data: indicates data structure error
+            # Validation mode: cell should be empty but has data
             raise UnexpectedDataError(data[self.column], filename)
-        # Disable mode and no data: normal case
+        # Validation mode: cell is empty as expected
         return None
 
     def _validate_and_convert(
         self, cell: Cell, enable: bool, filename: Optional[str] = None
-    ):
+    ) -> tuple[bool, any]:
         """Helper method to validate cell data and handle conversion
 
         Args:
             cell: Cell to validate
-            enable: Whether to expect data in this cell
+            enable: If True, expect and extract data. If False, validate cell is empty
             filename: Optional filename for error reporting
 
         Returns:
-            Returns tuple (should_process, cell_value), where should_process indicates
-            whether to continue conversion, cell_value is the original value
+            Tuple of (should_process, cell_value) where:
+            - should_process: True if value should be converted, False otherwise
+            - cell_value: The raw cell value or None
 
         Raises:
-            UnexpectedDataError: Raised when enable=False but data is found
+            UnexpectedDataError: When enable=False but data is found
         """
         if enable:
             if cell.value is not None:
