@@ -10,7 +10,7 @@ A powerful tool for converting Excel spreadsheets into JSON data with complex hi
 ## ✨ Features
 
 - 🔄 **Complex Data Structure Support** - Supports nested objects, lists, dictionaries, and other complex hierarchical structures
-- 📊 **Type Safe** - Built-in type validation and conversion (int, float, string, list, dict, class)
+- 📊 **Type Safe** - Built-in type validation and conversion (int, float, string, list, dict, object)
 - 🎯 **Detailed Error Messages** - Precisely locates error cells and reasons
 - 🚀 **Batch Processing** - Process entire directories of Excel files at once
 - 🔍 **Formatted Output** - Generates formatted JSON files for easy reading
@@ -143,7 +143,10 @@ Excel files must follow this format:
 | `string` | String | `name:string` |
 | `list` | List (requires two sub-columns: index and value) | `items:list` |
 | `dict` | Dictionary (requires two sub-columns: key and value) | `config:dict` |
-| `class` | Nested object | `player:class` |
+| `object` | Nested object | `player:object` |
+| ~~`class`~~ | **Deprecated**, use `object` instead | ~~`player:class`~~ |
+
+> **⚠️ Breaking Change (v0.3.0)**: The `class` type has been renamed to `object`. For backward compatibility, `class` is still supported but deprecated. It's recommended to use `object` in new projects.
 
 ### Example: Simple Table
 
@@ -196,7 +199,7 @@ Error example:
 $ stdem convert excel/ -o json/ -v
 
 example.xlsx:   [OK] Success!
-invalid.xlsx:   [ERROR] File: invalid.xlsx | Cell: B1 | Invalid type 'wrong'. Valid types: int, string, float, list, dict, class
+invalid.xlsx:   [ERROR] File: invalid.xlsx | Cell: B1 | Invalid type 'wrong'. Valid types: int, string, float, list, dict, object
 
 [DONE] Processing complete: 1 succeeded, 1 failed
 ```
