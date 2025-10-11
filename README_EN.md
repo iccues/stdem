@@ -2,7 +2,6 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/iccues/stdem/blob/main/LICENSE)
 [![PyPI - Version](https://img.shields.io/pypi/v/stdem)](https://pypi.org/project/stdem/)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/stdem)
 
 A powerful tool for converting Excel spreadsheets into JSON data with complex hierarchical structures.
 
