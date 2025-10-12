@@ -10,7 +10,7 @@
 ## ✨ 特性
 
 - 🔄 **复杂数据结构支持** - 支持嵌套对象、列表、字典等复杂层次结构
-- 📊 **类型安全** - 内置类型验证和转换（int, float, string, list, dict, class）
+- 📊 **类型安全** - 内置类型验证和转换（int, float, string, list, dict, object）
 - 🎯 **详细的错误提示** - 精确定位错误单元格和错误原因
 - 🚀 **批量处理** - 一次性处理整个目录的 Excel 文件
 - 🔍 **格式化输出** - 生成格式化的 JSON 文件，便于阅读
@@ -143,11 +143,14 @@ Excel 文件必须遵循以下格式：
 | `string` | 字符串 | `name:string` |
 | `list` | 列表（需要两个子列：索引和值） | `items:list` |
 | `dict` | 字典（需要两个子列：键和值） | `config:dict` |
-| `class` | 嵌套对象 | `player:class` |
+| `object` | 嵌套对象 | `player:object` |
+| ~~`class`~~ | **已弃用**，请使用 `object` | ~~`player:class`~~ |
+
+> **⚠️ 重要变更（v0.3.0）**：`class` 类型已重命名为 `object`。为了向后兼容，`class` 仍然可用但已标记为弃用，建议在新项目中使用 `object`。
 
 ### 示例：简单表格
 
-![Excel 示例表格](https://github.com/iccues/stdem/blob/main/docs/image/example.png)
+![Excel 示例表格](https://raw.githubusercontent.com/iccues/stdem/main/docs/image/example.png)
 
 转换为：
 
@@ -196,7 +199,7 @@ stdem 提供详细的错误信息，帮助快速定位问题：
 $ stdem convert excel/ -o json/ -v
 
 example.xlsx:   [OK] Success!
-invalid.xlsx:   [ERROR] File: invalid.xlsx | Cell: B1 | Invalid type 'wrong'. Valid types: int, string, float, list, dict, class
+invalid.xlsx:   [ERROR] File: invalid.xlsx | Cell: B1 | Invalid type 'wrong'. Valid types: int, string, float, list, dict, object
 
 [DONE] Processing complete: 1 succeeded, 1 failed
 ```
