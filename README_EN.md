@@ -150,7 +150,7 @@ Excel files must follow this format:
 
 ### Example: Simple Table
 
-![Excel format example](https://github.com/iccues/stdem/blob/main/docs/image/example.png)
+![Excel format example](https://raw.githubusercontent.com/iccues/stdem/main/docs/image/example.png)
 
 Converts to:
 
